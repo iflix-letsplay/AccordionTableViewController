@@ -39,6 +39,11 @@ class AccordionTableViewController: UIViewController {
                 )
             }
     }
+
+    func item(for indexPath: IndexPath) -> String? {
+        guard indexPath.row < items.count else { return .none }
+        return items[indexPath.row]
+    }
 }
 
 extension AccordionTableViewController: UITableViewDataSource {
@@ -50,9 +55,7 @@ extension AccordionTableViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
             let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
 
-        guard indexPath.row < items.count else { return cell }
-
-        let item = items[indexPath.row]
+        guard let item = item(for: indexPath) else { return cell }
 
         cell.textLabel?.text = item
 
