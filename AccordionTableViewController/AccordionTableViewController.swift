@@ -69,6 +69,29 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
             case redraws([Redraw])
         }
 
+        func collapsed() -> (Banana, Operation) {
+            var indexesToRemove: [Int] = []
+            var newItems: [Node] = []
+
+            items.enumerated().forEach { (index, item) in
+                guard item.open else {
+                    newItems.append(item)
+                    return
+                }
+
+                indexesToRemove.append(contentsOf: (index + 1)..<(index + 1 + item.children.count))
+                newItems.append(
+                    Node(
+                        item: item.item,
+                        children: item.children,
+                        open: false
+                    )
+                )
+            }
+
+            return (Banana(items: newItems), .redraws([.delete(indexesToRemove)]))
+        }
+
         func updated(bySelecting indexPath: IndexPath) -> (Banana, Operation) {
             guard let displayItem = item(for: indexPath) else {
                 return (self, .redraws([]))
