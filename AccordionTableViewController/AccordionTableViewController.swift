@@ -2,13 +2,62 @@ import UIKit
 
 class AccordionTableViewController: UIViewController {
 
+    struct Item: Equatable {
+        let text: String
+        let children: [Item]
+        let open: Bool
+    }
+
+    struct DisplayItem: Equatable {
+        let item: Item
+        let parent: Item?
+
+        var text: String { return item.text }
+    }
+
     let tableView = UITableView(frame: .zero)
 
-    let defaultItems = ["Pizza", "Pasta", "Curry"]
-    private lazy var items = defaultItems
-    let subItems = ["Small", "Medium", "Large"]
+    let items = [
+        Item(
+            text: "Pizza",
+            children: [
+                Item(text: "Margherita", children: [], open: false),
+                Item(text: "Pepperoni", children: [], open: false)
+            ],
+            open: true
+        ),
+        Item(
+            text: "Pasta",
+            children: [],
+            open: true
+        ),
+        Item(
+            text: "Curry",
+            children: [
+                Item(text: "Mild", children: [], open: false),
+                Item(text: "Spicy", children: [], open: false)
+            ],
+            open: false
+        ),
+    ]
 
-    private var open = false
+
+    var displayItems: [DisplayItem] {
+        return items.flatMap { flatten(item: $0) }
+    }
+
+    // TODO: flatten is the wrong name for this
+    private func flatten(item: Item, parent: Item? = .none) -> [DisplayItem] {
+        guard item.children.isEmpty == false else {
+            return [DisplayItem(item: item, parent: .none)]
+        }
+
+        guard item.open else {
+            return [DisplayItem(item: item, parent: .none)]
+        }
+
+        return [DisplayItem(item: item, parent: parent)] + item.children.flatMap { flatten(item: $0, parent: item) }
+    }
 
     let cellIdentifier = "cell"
 
@@ -45,16 +94,16 @@ class AccordionTableViewController: UIViewController {
             }
     }
 
-    func item(for indexPath: IndexPath) -> String? {
-        guard indexPath.row < items.count else { return .none }
-        return items[indexPath.row]
+    func item(for indexPath: IndexPath) -> DisplayItem? {
+        guard indexPath.row < displayItems.count else { return .none }
+        return displayItems[indexPath.row]
     }
 }
 
 extension AccordionTableViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+        return displayItems.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -62,7 +111,7 @@ extension AccordionTableViewController: UITableViewDataSource {
 
         guard let item = item(for: indexPath) else { return cell }
 
-        cell.textLabel?.text = item
+        cell.textLabel?.text = item.text
 
         return cell
     }
@@ -72,43 +121,5 @@ extension AccordionTableViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-
-        if open {
-            let newItems = defaultItems
-            tableView.performBatchUpdates(
-                {
-                    tableView.deleteRows(
-                        at: [
-                            IndexPath(row: 3, section: 0),
-                            IndexPath(row: 4, section: 0),
-                            IndexPath(row: 5, section: 0)
-                        ],
-                        with: .top
-                    )
-                    items = newItems
-            },
-                completion: { [weak self] done in
-                    if done { self?.open = false }
-                }
-            )
-        } else {
-            let newItems = defaultItems + subItems
-            tableView.performBatchUpdates(
-                {
-                    tableView.insertRows(
-                        at: [
-                            IndexPath(row: 3, section: 0),
-                            IndexPath(row: 4, section: 0),
-                            IndexPath(row: 5, section: 0)
-                        ],
-                        with: .top
-                    )
-                    items = newItems
-                },
-                completion: { [weak self] done in
-                    if done { self?.open = true }
-                }
-            )
-        }
     }
 }
