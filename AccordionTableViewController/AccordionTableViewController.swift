@@ -25,19 +25,19 @@ class AccordionTableViewController: UIViewController {
 
     let tableView = UITableView(frame: .zero)
 
-    var items = [
+    let collapsedItems = [
         Item(
             text: "Pizza",
             children: [
                 Item(text: "Margherita", children: [], open: false),
                 Item(text: "Pepperoni", children: [], open: false)
             ],
-            open: true
+            open: false
         ),
         Item(
             text: "Pasta",
             children: [],
-            open: true
+            open: false
         ),
         Item(
             text: "Curry",
@@ -49,6 +49,7 @@ class AccordionTableViewController: UIViewController {
         ),
     ]
 
+    lazy var items = collapsedItems
 
     var displayItems: [DisplayItem] {
         return items.flatMap { flatten(item: $0) }
