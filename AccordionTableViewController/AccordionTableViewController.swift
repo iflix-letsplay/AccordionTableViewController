@@ -143,6 +143,15 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
         var isCollapsed: Bool {
             return items.allSatisfy { $0.open == false }
         }
+
+        func indexPath(for item: T) -> IndexPath? {
+            guard let row = itemsToDisplay
+                .enumerated()
+                .first(where: { $0.element.node.item == item })?
+                .offset else { return .none }
+
+            return IndexPath(row: row, section: 0)
+        }
     }
 
     let tableView = UITableView(frame: .zero)
