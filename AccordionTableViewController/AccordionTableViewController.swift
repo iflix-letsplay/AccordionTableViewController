@@ -54,6 +54,8 @@ class AccordionTableViewController: UIViewController {
         return items.flatMap { flatten(item: $0) }
     }
 
+    weak var delegate: AccordionTableViewControllerDelegate?
+
     // TODO: flatten is the wrong name for this
     private func flatten(item: Item, parent: Item? = .none) -> [DisplayItem] {
         guard item.children.isEmpty == false else {
@@ -71,6 +73,8 @@ class AccordionTableViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        delegate = self
 
         view.backgroundColor = .red
 
@@ -136,7 +140,11 @@ extension AccordionTableViewController: UITableViewDelegate {
             // TODO:
         } else {
             // if there's no parent then we have a root item to expand/collapse
-            guard displayItem.item.children.isEmpty == false else { return }
+            guard displayItem.item.children.isEmpty == false else {
+                delegate?.tableViewController(self, didSelect: displayItem.item)
+                return
+            }
+
             guard let index = items.firstIndex(where: { $0.text == displayItem.item.text }) else { return }
             guard let displayIndex = displayItems.firstIndex(where: { $0.text == displayItem.item.text }) else { return }
 
@@ -174,5 +182,19 @@ extension AccordionTableViewController: UITableViewDelegate {
                 )
             }
         }
+    }
+}
+
+extension AccordionTableViewController: AccordionTableViewControllerDelegate {
+
+    func tableViewController(_ tableViewController: AccordionTableViewController, didSelect item: AccordionTableViewController.Item) {
+        let alert = UIAlertController(
+            title: .none,
+            message: item.text,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Dismiss", style: .default, handler: .none))
+
+        present(alert, animated: true, completion: .none)
     }
 }
