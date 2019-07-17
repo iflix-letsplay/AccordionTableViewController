@@ -1,5 +1,13 @@
 import UIKit
 
+protocol AccordionTableViewControllerDelegate: class {
+
+    func tableViewController(
+        _ tableViewController: AccordionTableViewController,
+        didSelect item: AccordionTableViewController.Item
+    )
+}
+
 class AccordionTableViewController: UIViewController {
 
     struct Item: Equatable {
