@@ -4,7 +4,11 @@ class AccordionTableViewController: UIViewController {
 
     let tableView = UITableView(frame: .zero)
 
-    private var items = ["Pizza", "Pasta", "Curry"]
+    let defaultItems = ["Pizza", "Pasta", "Curry"]
+    private lazy var items = defaultItems
+    let subItems = ["Small", "Medium", "Large"]
+
+    private var open = false
 
     let cellIdentifier = "cell"
 
@@ -69,7 +73,42 @@ extension AccordionTableViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        items = items.shuffled()
-        tableView.reloadData()
+        if open {
+            let newItems = defaultItems
+            tableView.performBatchUpdates(
+                {
+                    tableView.deleteRows(
+                        at: [
+                            IndexPath(row: 3, section: 0),
+                            IndexPath(row: 4, section: 0),
+                            IndexPath(row: 5, section: 0)
+                        ],
+                        with: .top
+                    )
+                    items = newItems
+            },
+                completion: { [weak self] done in
+                    if done { self?.open = false }
+                }
+            )
+        } else {
+            let newItems = defaultItems + subItems
+            tableView.performBatchUpdates(
+                {
+                    tableView.insertRows(
+                        at: [
+                            IndexPath(row: 3, section: 0),
+                            IndexPath(row: 4, section: 0),
+                            IndexPath(row: 5, section: 0)
+                        ],
+                        with: .top
+                    )
+                    items = newItems
+                },
+                completion: { [weak self] done in
+                    if done { self?.open = true }
+                }
+            )
+        }
     }
 }
