@@ -134,6 +134,15 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
                 return (Banana(items: newItems), .redraws([.insert(Array(indexes))]))
             }
         }
+
+        func isNodeOpen(at indexPath: IndexPath) -> Bool {
+            guard let t = item(for: indexPath) else { return false }
+            return t.node.open
+        }
+
+        var isCollapsed: Bool {
+            return items.allSatisfy { $0.open == false }
+        }
     }
 
     let tableView = UITableView(frame: .zero)
