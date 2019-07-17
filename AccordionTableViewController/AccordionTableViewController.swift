@@ -163,7 +163,8 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
 
         guard let item = banana.item(for: indexPath) else { return cell }
 
-        cell.textLabel?.text = item.node.item.description
+        cell.textLabel?.text =
+            (0...item.depth).map { _ in return "   " }.joined() + item.node.item.description
 
         return cell
     }
