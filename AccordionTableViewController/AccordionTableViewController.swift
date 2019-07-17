@@ -144,6 +144,11 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
             return items.allSatisfy { $0.open == false }
         }
 
+        func isLeafNode(at indexPath: IndexPath) -> Bool {
+            guard let t = item(for: indexPath) else { return false }
+            return t.node.children.isEmpty
+        }
+
         func indexPath(for item: T) -> IndexPath? {
             guard let row = itemsToDisplay
                 .enumerated()
