@@ -49,6 +49,54 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
             guard indexPath.row < itemsToDisplay.count else { return .none }
             return itemsToDisplay[indexPath.row]
         }
+
+        enum Operation {
+            case leafSelected(T)
+            case redraw(insert: [Int], delete: [Int])
+        }
+
+        func updated(bySelecting indexPath: IndexPath) -> (Banana, Operation) {
+            guard let displayItem = item(for: indexPath) else {
+                return (self, .redraw(insert: [], delete: []))
+            }
+
+            guard displayItem.parent == nil else {
+                // we have a soft rule for the depth of the tree being 2, so we can assume that if
+                // the item has a parent then it's not one that should be expanded/collapsed
+                return (self, .leafSelected(displayItem.node.item))
+            }
+
+            // if there's no parent then we have a root item to expand/collapse
+            guard displayItem.node.children.isEmpty == false else {
+                return (self, .leafSelected(displayItem.node.item))
+            }
+
+            guard let index = items.firstIndex(where: { $0.item == displayItem.node.item }) else {
+                return (self, .leafSelected(displayItem.node.item))
+            }
+
+            guard let displayIndex = itemsToDisplay.firstIndex(where: { $0.node.item == displayItem.node.item }) else {
+                return (self, .leafSelected(displayItem.node.item))
+            }
+
+            let newItem = Banana.Node(
+                item: displayItem.node.item,
+                children: displayItem.node.children,
+                open: !displayItem.node.open // TODO: add `flipped` Bool extension
+            )
+
+            var newItems = items
+            newItems.remove(at: index)
+            newItems.insert(newItem, at: index)
+
+            let indexes = ((displayIndex + 1)..<(displayIndex + 1 + displayItem.node.children.count))
+
+            if displayItem.node.open {
+                return (Banana(items: newItems), .redraw(insert: [], delete: Array(indexes)))
+            } else {
+                return (Banana(items: newItems), .redraw(insert: Array(indexes), delete: []))
+            }
+        }
     }
 
     let tableView = UITableView(frame: .zero)
@@ -126,54 +174,24 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        guard let displayItem = banana.item(for: indexPath) else { return }
+        let (newBanana, operation) = banana.updated(bySelecting: indexPath)
 
-        guard displayItem.parent == nil else {
-            // while we have a soft rule for the depth of the tree being 2 we can assume that
-            // if the item has a parent then it's not one that should be expanded/collapsed
-            onSelect?(displayItem.node.item)
-            return
-        }
-
-        // if there's no parent then we have a root item to expand/collapse
-        guard displayItem.node.children.isEmpty == false else {
-            onSelect?(displayItem.node.item)
-            return
-        }
-
-        guard let index = banana.items.firstIndex(where: { $0.item == displayItem.node.item }) else { return }
-        guard let displayIndex = banana.itemsToDisplay.firstIndex(where: { $0.node.item == displayItem.node.item }) else { return }
-
-        let newItem = Banana.Node(
-            item: displayItem.node.item,
-            children: displayItem.node.children,
-            open: !displayItem.node.open // TODO: add `flipped` Bool extension
-        )
-
-        var newItems = banana.items
-        newItems.remove(at: index)
-        newItems.insert(newItem, at: index)
-
-        let indexes = ((displayIndex + 1)..<(displayIndex + 1 + displayItem.node.children.count))
-
-        if displayItem.node.open {
+        switch operation {
+        case .leafSelected(let item): onSelect?(item)
+        case .redraw(let indexesToInsert, let indexesToRemove):
             tableView.performBatchUpdates(
                 {
-                    indexes.forEach { rowIndex in
-                        tableView.deleteRows(at: [IndexPath(row: rowIndex, section: 0)], with: .top)
-                    }
-                    banana = Banana(items: newItems)
-            },
-                completion: .none
-            )
-        } else {
-            tableView.performBatchUpdates(
-                {
-                    indexes.forEach { rowIndex in
-                        tableView.insertRows(at: [IndexPath(row: rowIndex, section: 0)], with: .top)
-                    }
-                    banana = Banana(items: newItems)
-            },
+                    tableView.deleteRows(
+                        at: indexesToRemove.map { IndexPath(row: $0, section: 0) },
+                        with: .top
+                    )
+                    tableView.insertRows(
+                        at: indexesToInsert.map { IndexPath(row: $0, section: 0) },
+                        with: .top
+                    )
+
+                    banana = newBanana
+                },
                 completion: .none
             )
         }
