@@ -50,6 +50,15 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
             return itemsToDisplay[indexPath.row]
         }
 
+        func toString() -> String {
+            func toString(node: Node) -> String {
+                guard node.open else { return "\(node.item)" }
+                return "\(node.item) \(node.children.map(toString(node:)))"
+            }
+
+            return items.map(toString(node:)).joined(separator: " ")
+        }
+
         enum Operation {
 
             enum Redraw {
