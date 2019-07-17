@@ -3,13 +3,9 @@ import UIKit
 class AccordionTableViewController: UIViewController {
 
     struct Item {
-        enum Kind {
-            case actionable(action: () -> Void)
-            case container(items: [Item], expanded: Bool)
-        }
-
         let text: String
-        let kind: Kind
+        let children: [Item]
+        let open: Bool
     }
 
     let tableView = UITableView(frame: .zero)
@@ -17,29 +13,27 @@ class AccordionTableViewController: UIViewController {
     let items = [
         Item(
             text: "Pizza",
-            kind: .container(
-                items: [
-                    Item(text: "Margherita", kind: .actionable(action: {})),
-                    Item(text: "Pepperoni", kind: .actionable(action: {}))
-                ],
-                expanded: false
-            )
+            children: [
+                Item(text: "Margherita", children: [], open: false),
+                Item(text: "Pepperoni", children: [], open: false)
+            ],
+            open: true
         ),
         Item(
             text: "Pasta",
-            kind: .actionable(action: {})
+            children: [],
+            open: true
         ),
         Item(
             text: "Curry",
-            kind: .container(
-                items: [
-                    Item(text: "Mild", kind: .actionable(action: {})),
-                    Item(text: "Spicy", kind: .actionable(action: {}))
-                ],
-                expanded: true
-            )
-        )
+            children: [
+                Item(text: "Mild", children: [], open: false),
+                Item(text: "Spicy", children: [], open: false)
+            ],
+            open: false
+        ),
     ]
+
 
     var displayItems: [Item] {
         return items.flatMap(flatten)
@@ -47,13 +41,11 @@ class AccordionTableViewController: UIViewController {
 
     // TODO: flatten is the wrong name for this
     private func flatten(item: Item) -> [Item] {
-        switch item.kind {
-        case .actionable(_):
-            return [item]
-        case .container(let items, let expanded):
-            guard expanded else { return [item] }
-            return [item] + items.flatMap(flatten)
-        }
+        guard item.children.isEmpty == false else { return [item] }
+
+        guard item.open else { return [item] }
+
+        return [item] + item.children.flatMap(flatten)
     }
 
     let cellIdentifier = "cell"
