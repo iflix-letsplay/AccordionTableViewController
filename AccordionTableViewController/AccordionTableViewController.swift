@@ -235,31 +235,95 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let (newBanana, operation) = banana.updated(bySelecting: indexPath)
+        if banana.isLeafNode(at: indexPath) == false && banana.isNodeOpen(at: indexPath) == false && banana.isCollapsed == false {
+            guard let item = banana.item(for: indexPath)?.node.item else { return }
 
-        switch operation {
-        case .leafSelected(let item): onSelect?(item)
-        case .redraws(let redraws):
-            redraws.forEach { redraw in
-                tableView.performBatchUpdates(
-                    {
-                        switch redraw {
-                        case .delete(let indexes):
-                            tableView.deleteRows(
-                                at: indexes.map { IndexPath(row: $0, section: 0) },
-                                with: .top
-                            )
-                        case .insert(let indexes):
-                            tableView.insertRows(
-                                at: indexes.map { IndexPath(row: $0, section: 0) },
-                                with: .top
-                            )
-                        }
+            // if the selected item can be opened but is closed _and_ there's another open item...
+            // ...collapse everything first...
+            let (newBanana, operation) = banana.collapsed()
 
-                        banana = newBanana
-                },
-                    completion: .none
-                )
+            switch operation {
+            case .leafSelected(let item): onSelect?(item)
+            case .redraws(let redraws):
+                redraws.forEach { redraw in
+                    tableView.performBatchUpdates(
+                        {
+                            switch redraw {
+                            case .delete(let indexes):
+                                tableView.deleteRows(
+                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                    with: .top
+                                )
+                            case .insert(let indexes):
+                                tableView.insertRows(
+                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                    with: .top
+                                )
+                            }
+
+                            banana = newBanana
+                    },
+                        completion: .none
+                    )
+                }
+            }
+
+            // ...then actually expand the item
+            guard let newIndexPath = banana.indexPath(for: item) else { return }
+            let (_newBanana, _operation) = banana.updated(bySelecting: newIndexPath)
+
+            switch _operation {
+            case .leafSelected(let item): onSelect?(item)
+            case .redraws(let redraws):
+                redraws.forEach { redraw in
+                    tableView.performBatchUpdates(
+                        {
+                            switch redraw {
+                            case .delete(let indexes):
+                                tableView.deleteRows(
+                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                    with: .top
+                                )
+                            case .insert(let indexes):
+                                tableView.insertRows(
+                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                    with: .top
+                                )
+                            }
+
+                            banana = _newBanana
+                    },
+                        completion: .none
+                    )
+                }
+            }
+        } else {
+            let (newBanana, operation) = banana.updated(bySelecting: indexPath)
+
+            switch operation {
+            case .leafSelected(let item): onSelect?(item)
+            case .redraws(let redraws):
+                redraws.forEach { redraw in
+                    tableView.performBatchUpdates(
+                        {
+                            switch redraw {
+                            case .delete(let indexes):
+                                tableView.deleteRows(
+                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                    with: .top
+                                )
+                            case .insert(let indexes):
+                                tableView.insertRows(
+                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                    with: .top
+                                )
+                            }
+
+                            banana = newBanana
+                    },
+                        completion: .none
+                    )
+                }
             }
         }
     }
