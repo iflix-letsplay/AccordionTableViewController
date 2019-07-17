@@ -15,6 +15,7 @@ class AccordionTableViewController: UIViewController {
 
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellIdentifier)
         tableView.dataSource = self
+        tableView.delegate = self
         tableView.tableFooterView = UIView()
 
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,5 +61,16 @@ extension AccordionTableViewController: UITableViewDataSource {
         cell.textLabel?.text = item
 
         return cell
+    }
+}
+
+extension AccordionTableViewController: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        guard let item = item(for: indexPath) else { return }
+
+        print(item)
     }
 }
