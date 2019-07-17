@@ -17,7 +17,7 @@ class AccordionTableViewController: UIViewController {
 
     let tableView = UITableView(frame: .zero)
 
-    let items = [
+    var items = [
         Item(
             text: "Pizza",
             children: [
@@ -121,5 +121,50 @@ extension AccordionTableViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+
+        guard let displayItem = item(for: indexPath) else { return }
+
+        if let _ = displayItem.parent {
+            // TODO:
+        } else {
+            // if there's no parent then we have a root item to expand/collapse
+            guard displayItem.item.children.isEmpty == false else { return }
+            guard let index = items.firstIndex(where: { $0.text == displayItem.item.text }) else { return }
+            guard let displayIndex = displayItems.firstIndex(where: { $0.text == displayItem.item.text }) else { return }
+
+            let newItem = Item(
+                text: displayItem.item.text,
+                children: displayItem.item.children,
+                open: !displayItem.item.open // TODO: add `flipped` Bool extension
+            )
+
+            var newItems = items
+            newItems.remove(at: index)
+            newItems.insert(newItem, at: index)
+
+            let indexes = ((displayIndex + 1)..<(displayIndex + 1 + displayItem.item.children.count))
+
+            if displayItem.item.open {
+                tableView.performBatchUpdates(
+                    {
+                        indexes.forEach { rowIndex in
+                            tableView.deleteRows(at: [IndexPath(row: rowIndex, section: 0)], with: .top)
+                        }
+                        items = newItems
+                },
+                    completion: .none
+                )
+            } else {
+                tableView.performBatchUpdates(
+                    {
+                        indexes.forEach { rowIndex in
+                            tableView.insertRows(at: [IndexPath(row: rowIndex, section: 0)], with: .top)
+                        }
+                        items = newItems
+                },
+                    completion: .none
+                )
+            }
+        }
     }
 }
