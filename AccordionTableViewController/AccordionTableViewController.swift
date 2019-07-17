@@ -2,10 +2,17 @@ import UIKit
 
 class AccordionTableViewController: UIViewController {
 
-    struct Item {
+    struct Item: Equatable {
         let text: String
         let children: [Item]
         let open: Bool
+    }
+
+    struct DisplayItem: Equatable {
+        let item: Item
+        let parent: Item?
+
+        var text: String { return item.text }
     }
 
     let tableView = UITableView(frame: .zero)
@@ -35,17 +42,21 @@ class AccordionTableViewController: UIViewController {
     ]
 
 
-    var displayItems: [Item] {
-        return items.flatMap(flatten)
+    var displayItems: [DisplayItem] {
+        return items.flatMap { flatten(item: $0) }
     }
 
     // TODO: flatten is the wrong name for this
-    private func flatten(item: Item) -> [Item] {
-        guard item.children.isEmpty == false else { return [item] }
+    private func flatten(item: Item, parent: Item? = .none) -> [DisplayItem] {
+        guard item.children.isEmpty == false else {
+            return [DisplayItem(item: item, parent: .none)]
+        }
 
-        guard item.open else { return [item] }
+        guard item.open else {
+            return [DisplayItem(item: item, parent: .none)]
+        }
 
-        return [item] + item.children.flatMap(flatten)
+        return [DisplayItem(item: item, parent: parent)] + item.children.flatMap { flatten(item: $0, parent: item) }
     }
 
     let cellIdentifier = "cell"
@@ -83,7 +94,7 @@ class AccordionTableViewController: UIViewController {
             }
     }
 
-    func item(for indexPath: IndexPath) -> Item? {
+    func item(for indexPath: IndexPath) -> DisplayItem? {
         guard indexPath.row < displayItems.count else { return .none }
         return displayItems[indexPath.row]
     }
