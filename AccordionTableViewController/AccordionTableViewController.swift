@@ -4,7 +4,7 @@ class AccordionTableViewController: UIViewController {
 
     let tableView = UITableView(frame: .zero)
 
-    let items = ["Pizza", "Pasta", "Curry"]
+    private var items = ["Pizza", "Pasta", "Curry"]
 
     let cellIdentifier = "cell"
 
@@ -69,8 +69,7 @@ extension AccordionTableViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        guard let item = item(for: indexPath) else { return }
-
-        print(item)
+        items = items.shuffled()
+        tableView.reloadData()
     }
 }
