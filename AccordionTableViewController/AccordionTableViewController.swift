@@ -263,37 +263,39 @@ class AccordionTableViewController<T: Equatable & CustomStringConvertible>: UIVi
 
                             banana = newBanana
                     },
-                        completion: .none
-                    )
-                }
-            }
+                        completion: { [weak self] _ in
+                            guard let self = self else { return }
 
-            // ...then actually expand the item
-            guard let newIndexPath = banana.indexPath(for: item) else { return }
-            let (_newBanana, _operation) = banana.updated(bySelecting: newIndexPath)
+                            // ...then actually expand the item
+                            guard let newIndexPath = self.banana.indexPath(for: item) else { return }
+                            let (_newBanana, _operation) = self.banana.updated(bySelecting: newIndexPath)
 
-            switch _operation {
-            case .leafSelected(let item): onSelect?(item)
-            case .redraws(let redraws):
-                redraws.forEach { redraw in
-                    tableView.performBatchUpdates(
-                        {
-                            switch redraw {
-                            case .delete(let indexes):
-                                tableView.deleteRows(
-                                    at: indexes.map { IndexPath(row: $0, section: 0) },
-                                    with: .top
-                                )
-                            case .insert(let indexes):
-                                tableView.insertRows(
-                                    at: indexes.map { IndexPath(row: $0, section: 0) },
-                                    with: .top
-                                )
+                            switch _operation {
+                            case .leafSelected(let item): self.onSelect?(item)
+                            case .redraws(let redraws):
+                                redraws.forEach { redraw in
+                                    tableView.performBatchUpdates(
+                                        {
+                                            switch redraw {
+                                            case .delete(let indexes):
+                                                tableView.deleteRows(
+                                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                                    with: .top
+                                                )
+                                            case .insert(let indexes):
+                                                tableView.insertRows(
+                                                    at: indexes.map { IndexPath(row: $0, section: 0) },
+                                                    with: .top
+                                                )
+                                            }
+
+                                            self.banana = _newBanana
+                                    },
+                                        completion: .none
+                                    )
+                                }
                             }
-
-                            banana = _newBanana
-                    },
-                        completion: .none
+                    }
                     )
                 }
             }
